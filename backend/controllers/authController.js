@@ -32,12 +32,17 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Check if this is the first user in the DB (Make them Admin)
+    const isFirstAccount = (await User.countDocuments({})) === 0;
+    const role = isFirstAccount ? 'admin' : 'user';
+
     // Create user
     const user = await User.create({
         name,
         email,
         password: hashedPassword,
         phone,
+        role,
     });
 
     if (user) {

@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
+import Gallery from '../components/Gallery';
 import BMICalculator from '../components/BMICalculator';
 
 export default function Home() {
@@ -7,6 +8,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white">
       <Navbar />
       <Hero />
+      <Gallery />
       <BMICalculator />
 
       {/* Footer Placeholder */}

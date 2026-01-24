@@ -27,6 +27,8 @@ export default function Login() {
             if (res.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data));
+
+                // Redirect based on role
                 if (data.role === 'admin') {
                     router.push('/admin');
                 } else {

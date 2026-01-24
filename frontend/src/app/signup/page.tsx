@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Link from 'next/link';
+import { CheckCircle } from 'lucide-react';
 
 export default function Signup() {
     const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function Signup() {
         password: '',
     });
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,7 +37,16 @@ export default function Signup() {
             if (res.ok) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data));
-                router.push('/dashboard');
+                setSuccess(true);
+
+                // Show success message, then redirect
+                setTimeout(() => {
+                    if (data.role === 'admin') {
+                        router.push('/admin');
+                    } else {
+                        router.push('/dashboard');
+                    }
+                }, 2000);
             } else {
                 setError(data.message || 'Signup failed');
             }
@@ -43,6 +54,23 @@ export default function Signup() {
             setError('Something went wrong. Is the backend running?');
         }
     };
+
+    // Success Screen
+    if (success) {
+        return (
+            <div className="min-h-screen bg-black text-white">
+                <Navbar />
+                <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+                    <div className="text-center p-10">
+                        <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
+                        <h2 className="text-3xl font-bold mb-4">Account Created!</h2>
+                        <p className="text-gray-400 mb-2">Welcome to FitWithRAM 💪</p>
+                        <p className="text-sm text-gray-500">Redirecting to your dashboard...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black text-white">

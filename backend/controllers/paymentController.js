@@ -4,10 +4,20 @@ const Payment = require('../models/paymentModel');
 const User = require('../models/userModel');
 const Plan = require('../models/planModel');
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Lazy initialization to prevent crash when keys are not set
+let razorpayInstance = null;
+const getRazorpay = () => {
+    if (!razorpayInstance) {
+        if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+            throw new Error('Razorpay keys are not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env');
+        }
+        razorpayInstance = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+    }
+    return razorpayInstance;
+};
 
 // @desc    Create Razorpay Order
 // @route   POST /api/payment/create-order
@@ -28,7 +38,7 @@ const createOrder = async (req, res) => {
     };
 
     try {
-        const order = await razorpay.orders.create(options);
+        const order = await getRazorpay().orders.create(options);
 
         const payment = await Payment.create({
             user: req.user.id,

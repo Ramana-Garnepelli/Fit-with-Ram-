@@ -6,11 +6,20 @@ import Link from 'next/link';
 const Hero = () => {
     return (
         <div className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black text-white">
-            {/* Background Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black z-0" />
-
-            {/* Dynamic Background Effect (Optional: could be an image or video) */}
-            <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+            {/* Background Video or Image */}
+            <div className="absolute inset-0 z-0">
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover opacity-30"
+                >
+                    <source src="/uploads/ram_bg_video.mp4" type="video/mp4" />
+                    {/* Fallback image if video fails or while loading */}
+                    <img src="/uploads/ram_bg.jpg" className="w-full h-full object-cover" alt="Background" />
+                </video>
+            </div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row items-center">
 
@@ -53,12 +62,16 @@ const Hero = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mt-10 sm:mt-0 sm:w-1/2 flex justify-center"
                 >
-                    {/* Placeholder for Trainer Photo - You will replace this! */}
-                    <div className="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full border-4 border-[#00f2ea]/30 overflow-hidden shadow-[0_0_50px_rgba(0,242,234,0.3)]">
-                        {/* <img src="/trainer-photo.jpg" alt="FitWithRAM Trainer" className="object-cover w-full h-full" /> */}
-                        <div className="w-full h-full bg-gray-800 flex items-center justify-center text-gray-500">
-                            <span className="text-center p-4">Add Your Photo Here<br />(public/trainer.jpg)</span>
-                        </div>
+                    <div className="relative w-80 h-80 sm:w-96 sm:h-96 rounded-full border-4 border-[#00f2ea]/30 overflow-hidden shadow-[0_0_50px_rgba(0,242,234,0.3)]">
+                        <img
+                            src="/uploads/RAMANAGYMPIC-2.jpg"
+                            alt="Ram Trainer"
+                            className="object-cover w-full h-full"
+                            onError={(e) => {
+                                // Fallback to placeholder if image not found
+                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop';
+                            }}
+                        />
                     </div>
                 </motion.div>
             </div>
