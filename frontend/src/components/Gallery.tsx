@@ -8,15 +8,15 @@ export default function Gallery() {
     ];
 
     return (
-        <section className="py-20 bg-black text-white">
+        <section className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4">
-                <h2 className="text-4xl font-bold text-center mb-12">
-                    Real <span className="text-[#00f2ea]">Results</span>
+                <h2 className="text-4xl font-black text-center mb-16 text-gray-900 tracking-tight">
+                    REAL <span className="text-[#00f2ea]">RESULTS</span>
                 </h2>
 
                 <div className="grid md:grid-cols-3 gap-8">
                     {images.map((img, index) => (
-                        <div key={index} className="group relative overflow-hidden rounded-2xl border-2 border-gray-800 hover:border-[#00f2ea] transition-all duration-300">
+                        <div key={index} className="group relative overflow-hidden rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500">
                             <div className="aspect-[3/4]">
                                 <img
                                     src={img.src}

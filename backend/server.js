@@ -11,11 +11,23 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        process.env.FRONTEND_URL
+    ].filter(Boolean),
     credentials: true
 }));
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false, // Disable CSP in dev to avoid blocking local fetches
+}));
 app.use(morgan('dev'));
+
+// Debug middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -40,7 +52,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/programs', require('./routes/programRoutes'));
-// app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/content', require('./routes/contentRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

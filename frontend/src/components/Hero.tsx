@@ -1,79 +1,54 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 const Hero = () => {
     return (
-        <div className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black text-white">
-            {/* Background Video or Image */}
-            <div className="absolute inset-0 z-0">
-                <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover opacity-30"
-                >
-                    <source src="/uploads/ram_bg_video.mp4" type="video/mp4" />
-                    {/* Fallback image if video fails or while loading */}
-                    <img src="/uploads/ram_bg.jpg" className="w-full h-full object-cover" alt="Background" />
-                </video>
+        <div className="relative bg-white pt-24 md:pt-0 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col md:flex-row items-center gap-12 min-h-[70vh] py-12 md:py-20">
+
+                    {/* Left Content */}
+                    <div className="flex-1 text-center md:text-left z-10">
+                        <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight leading-tight uppercase">
+                            BUILD <span className="text-blue-600">YOUR</span> <br />
+                            DREAM BODY
+                        </h1>
+                        <p className="text-lg md:text-xl text-gray-600 mb-10 leading-relaxed font-medium max-w-lg mx-auto md:mx-0">
+                            Professional coaching tailored to your lifestyle. <br className="hidden md:block" />
+                            Join clients who transformed their lives.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                            <Link href="/programs" className="bg-black text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all shadow-xl hover:shadow-2xl text-center">
+                                Start Transformation
+                            </Link>
+                            <Link href="/contact" className="border-2 border-black text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-black hover:text-white transition-all text-center">
+                                Book Consultation
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Right Image - Total View */}
+                    <div className="flex-1 w-full relative">
+                        <div className="relative h-[400px] md:h-[550px] w-full bg-[#f8f9fa] rounded-3xl overflow-hidden border border-gray-100 shadow-2xl transition-transform hover:scale-[1.02] duration-500">
+                            <img
+                                src="/uploads/RAMANAGYMPIC-2.jpg"
+                                alt="Ram Fitness"
+                                className="w-full h-full object-contain p-4"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop';
+                                }}
+                            />
+                        </div>
+                        {/* Decorative background element */}
+                        <div className="absolute -z-10 -bottom-6 -right-6 w-full h-full bg-blue-100 rounded-3xl opacity-50 blur-xl"></div>
+                    </div>
+                </div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left flex flex-col sm:flex-row items-center">
-
-                {/* Text Content */}
-                <motion.div
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="sm:w-1/2"
-                >
-                    <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight">
-                        <span className="block text-gray-200">Transform Your Body</span>
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00f2ea] to-[#ff0050]">
-                            With FitWithRAM
-                        </span>
-                    </h1>
-                    <p className="mt-4 text-xl text-gray-400 max-w-lg mx-auto sm:mx-0">
-                        Professional Online & Offline Training for Muscle Building, Fat Loss, and Strength. Join the elite team today.
-                    </p>
-                    <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center sm:justify-start">
-                        <Link
-                            href="/pricing"
-                            className="px-8 py-4 text-lg font-bold rounded-full bg-gradient-to-r from-[#00f2ea] to-[#ff0050] text-black hover:scale-105 transition-transform"
-                        >
-                            Start Training
-                        </Link>
-                        <Link
-                            href="/contact"
-                            className="px-8 py-4 text-lg font-bold rounded-full border border-gray-500 hover:bg-white/10 transition-colors"
-                        >
-                            Contact Me
-                        </Link>
-                    </div>
-                </motion.div>
-
-                {/* Hero Image / Trainer Photo */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="mt-10 sm:mt-0 sm:w-1/2 flex justify-center"
-                >
-                    <div className="relative w-80 h-80 sm:w-96 sm:h-96 rounded-full border-4 border-[#00f2ea]/30 overflow-hidden shadow-[0_0_50px_rgba(0,242,234,0.3)]">
-                        <img
-                            src="/uploads/RAMANAGYMPIC-2.jpg"
-                            alt="Ram Trainer"
-                            className="object-cover w-full h-full"
-                            onError={(e) => {
-                                // Fallback to placeholder if image not found
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop';
-                            }}
-                        />
-                    </div>
-                </motion.div>
+            {/* Branding background text */}
+            <div className="absolute top-1/2 left-0 -translate-y-1/2 text-[15rem] font-black text-gray-50 -z-10 select-none hidden lg:block opacity-40">
+                FITNESS
             </div>
         </div>
     );

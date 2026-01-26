@@ -13,6 +13,8 @@ const userSchema = mongoose.Schema({
     password: { type: String, required: true },
     phone: { type: String },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    activePlanType: { type: String, default: null }, // 'muscle_building', etc.
+    currentDay: { type: Number, default: 1 },
     purchases: [purchaseSchema],
     workoutPlan: { type: Object }, // Store detailed plan structure specifically for this user
     dietPlan: { type: Object }     // Store detailed diet structure specifically for this user
