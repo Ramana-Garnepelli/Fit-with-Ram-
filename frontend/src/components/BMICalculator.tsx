@@ -22,6 +22,10 @@ const BMICalculator = () => {
             h = h / 100;
         }
 
+
+
+
+
         if (h <= 0 || w <= 0) {
             alert("Please enter valid positive numbers");
             return;
@@ -91,8 +95,8 @@ const BMICalculator = () => {
                                     <p className="text-gray-500 font-medium">Your BMI Score</p>
                                     <p className="text-6xl font-black text-gray-900">{bmi}</p>
                                     <p className={`text-2xl font-bold ${category === 'Obese' ? 'text-red-500' :
-                                            category === 'Overweight' ? 'text-orange-500' :
-                                                category === 'Normal Weight' ? 'text-green-600' : 'text-blue-500'
+                                        category === 'Overweight' ? 'text-orange-500' :
+                                            category === 'Normal Weight' ? 'text-green-600' : 'text-blue-500'
                                         }`}>
                                         {category}
                                     </p>
