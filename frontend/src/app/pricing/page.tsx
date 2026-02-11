@@ -63,7 +63,14 @@ function PricingContent() {
         setVerifying(true);
 
         try {
-            const token = localStorage.getItem('token'); // Assuming auth token is stored
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                alert('Please login to continue');
+                router.push('/login');
+                return;
+            }
+
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
             const res = await fetch(`${apiUrl}/api/payment/phonepe/initiate`, {
@@ -77,11 +84,20 @@ function PricingContent() {
 
             const data = await res.json();
 
+            if (res.status === 401) {
+                // Token expired or user not found - clear storage and redirect to login
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                alert('Your session has expired. Please login again to continue.');
+                router.push('/login');
+                return;
+            }
+
             if (res.ok && data.url) {
                 // Redirect to PhonePe payment page
                 window.location.href = data.url;
             } else {
-                alert(`Payment Initiation Failed: ${data.message}`);
+                alert(`Payment Initiation Failed: ${data.message || 'Unknown error'}`);
                 setVerifying(false);
             }
         } catch (error) {
