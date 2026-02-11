@@ -1,0 +1,10 @@
+# Defaults
+node_modules
+.next
+.env
+.env.local
+.DS_Store
+
+# Ignore User Uploads & Temporary Media Files
+public/uploads
+public/RamanaGYMVideo*
