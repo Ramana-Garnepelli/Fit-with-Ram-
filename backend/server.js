@@ -108,11 +108,23 @@ app.get('/', (req, res) => {
 });
 
 // Import Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/payment', require('./routes/paymentRoutes'));
-app.use('/api/programs', require('./routes/programRoutes'));
-app.use('/api/content', require('./routes/contentRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
+const authRoutes = require('./routes/authRoutes');
+const programRoutes = require('./routes/programRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const contentRoutes = require('./routes/contentRoutes');
+const workoutRoutes = require('./routes/workoutRoutes');
+const dietRoutes = require('./routes/dietRoutes');
+const progressRoutes = require('./routes/progressRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/programs', programRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/diet', dietRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
