@@ -86,6 +86,7 @@ const updateUserPlan = async (req, res) => {
         if (user) {
             user.workoutPlan = req.body.workoutPlan || user.workoutPlan;
             user.dietPlan = req.body.dietPlan || user.dietPlan;
+            user.activePlanType = req.body.planType || user.activePlanType;
 
             const updatedUser = await user.save();
             res.json(updatedUser);
@@ -97,4 +98,27 @@ const updateUserPlan = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, getUserById, deleteUser, getDashboardStats, updateUserPlan };
+const { seedWorkoutPlans, seedDietPlans } = require('../seedWorkoutDiet');
+
+// @desc    Seed workout and diet plans
+// @route   POST /api/admin/seed-workout-diet
+// @access  Private/Admin
+const seedWorkoutDietData = async (req, res) => {
+    try {
+        await seedWorkoutPlans();
+        await seedDietPlans();
+        res.status(200).json({ message: 'Workout and diet plans seeded successfully!' });
+    } catch (error) {
+        console.error('Error seeding data:', error);
+        res.status(500).json({ message: 'Error seeding data', error: error.message });
+    }
+};
+
+module.exports = {
+    getUsers,
+    deleteUser,
+    getDashboardStats,
+    getUserById,
+    updateUserPlan,
+    seedWorkoutDietData
+};

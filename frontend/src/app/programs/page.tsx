@@ -3,6 +3,7 @@
 import Navbar from '../../components/Navbar';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { API_URL } from '../../lib/api';
 
 export default function Programs() {
     const [programs, setPrograms] = useState<any[]>([]);
@@ -15,8 +16,7 @@ export default function Programs() {
 
     const fetchPrograms = async () => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await fetch(`${apiUrl}/api/programs`);
+            const res = await fetch(`${API_URL}/api/programs`);
             if (res.ok) {
                 const data = await res.json();
                 setPrograms(data);

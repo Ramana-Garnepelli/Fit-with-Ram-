@@ -27,20 +27,21 @@ const initiatePayment = async (req, res) => {
         }
 
         const merchantTransactionId = `MT${Date.now()}`;
-        // Hardcoding 1 Rupee (100 Paise) for testing as requested by user
-        const amount = 100;
+        // For production, use plan.price * 100 (PhonePe expects paise)
+        // For testing, user requested 100 (1 INR)
+        const amount = process.env.NODE_ENV === 'production' ? plan.price * 100 : 100;
 
         // Custom mobile number for testing as requested
-        const mobileNumber = "7036592919";
+        const mobileNumber = req.user.phone || "7036592919"; // Use user's phone or fallback to test number
 
         const data = {
             merchantId: MERCH_ID,
             merchantTransactionId: merchantTransactionId,
             merchantUserId: userId,
             amount: amount,
-            redirectUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success?id=${merchantTransactionId}`,
+            redirectUrl: `${process.env.FRONTEND_URL}/payment/success?id=${merchantTransactionId}`,
             redirectMode: "REDIRECT",
-            callbackUrl: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/payment/phonepe/callback`,
+            callbackUrl: `${process.env.BACKEND_URL}/api/payment/phonepe/callback`,
             mobileNumber: mobileNumber,
             paymentInstrument: {
                 type: "PAY_PAGE"
@@ -188,7 +189,37 @@ const checkStatus = async (req, res) => {
     }
 };
 
+// @desc    PhonePe Callback
+// @route   POST /api/payment/phonepe/callback
+// @access  Public
+const handleCallback = async (req, res) => {
+    try {
+        console.log("--- PHONEPE CALLBACK RECEIVED ---");
+        console.log("Headers:", JSON.stringify(req.headers, null, 2));
+
+        // PhonePe sends the response as a base64 encoded string in req.body.response
+        if (req.body && req.body.response) {
+            const decodedResponse = Buffer.from(req.body.response, 'base64').toString('utf-8');
+            console.log("Decoded Callback Payload:", decodedResponse);
+
+            const responseData = JSON.parse(decodedResponse);
+            console.log("Parsed Callback Data:", JSON.stringify(responseData, null, 2));
+
+            // Note: In production, you must also verify the X-VERIFY header
+            // to ensure the callback actually came from PhonePe.
+        } else {
+            console.log("No response field found in callback body:", req.body);
+        }
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error("PhonePe Callback Error:", error);
+        res.status(500).json({ success: false });
+    }
+};
+
 module.exports = {
     initiatePayment,
-    checkStatus
+    checkStatus,
+    handleCallback
 };

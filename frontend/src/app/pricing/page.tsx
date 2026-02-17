@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, X } from 'lucide-react';
 import { Suspense } from 'react';
+import { API_URL } from '../../lib/api';
 
 function PricingContent() {
     const [plans, setPlans] = useState<any[]>([]);
@@ -25,8 +26,7 @@ function PricingContent() {
 
     const fetchPlans = async () => {
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await fetch(`${apiUrl}/api/programs`);
+            const res = await fetch(`${API_URL}/api/programs`);
             if (res.ok) {
                 const data = await res.json();
                 setPlans(data);
@@ -71,9 +71,7 @@ function PricingContent() {
                 return;
             }
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-            const res = await fetch(`${apiUrl}/api/payment/phonepe/initiate`, {
+            const res = await fetch(`${API_URL}/api/payment/phonepe/initiate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

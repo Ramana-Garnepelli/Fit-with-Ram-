@@ -6,6 +6,11 @@ import Navbar from '../../components/Navbar';
 import { Dumbbell, Salad, CheckCircle, Calendar, TrendingUp, Target } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import DailyPlanViewer from '../../components/DailyPlanViewer';
+import WorkoutTracker from '../../components/WorkoutTracker';
+import DietTracker from '../../components/DietTracker';
+import ProgressLogger from '../../components/ProgressLogger';
+import WeeklyCalendar from '../../components/WeeklyCalendar';
+import { API_URL } from '../../lib/api';
 
 export default function Dashboard() {
     const [user, setUser] = useState<any>(null);
@@ -227,8 +232,25 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Dynamic Daily Content */}
-                    <DailyPlanViewer user={user} />
+                    {/* Main Tracker Grid */}
+                    <div className="grid lg:grid-cols-3 gap-8 mb-10">
+                        {/* Center/Left: Workout */}
+                        <div className="lg:col-span-2 space-y-8">
+                            <WeeklyCalendar />
+                            <WorkoutTracker />
+                        </div>
+
+                        {/* Right Sidebar: Diet & Progress */}
+                        <div className="space-y-8">
+                            <DietTracker />
+                            <ProgressLogger />
+                        </div>
+                    </div>
+
+                    {/* Original Daily Content (Legacy support or additional tips) */}
+                    <div className="hidden">
+                        <DailyPlanViewer user={user} />
+                    </div>
 
                     {/* Client Data Form */}
                     <div className="mt-10 bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">

@@ -105,29 +105,26 @@ For PhonePe integration issues:
 - PhonePe Business Support: support@phonepe.com
 - PhonePe Developer Docs: https://developer.phonepe.com/
 
-## Current Implementation Details
+### Automated Production Logic ✅
 
-### Amount Configuration
+The current implementation in `backend/controllers/phonePeController.js` is already designed for a "hands-free" production switch:
 
-Currently hardcoded to ₹1 (100 paise) for testing:
-
+#### 1. Dynamic Amount
+The code automatically detects if it's in a production environment:
 ```javascript
-// In phonePeController.js
-const amount = 100; // 100 paise = ₹1
+const amount = process.env.NODE_ENV === 'production' ? plan.price * 100 : 100;
+```
+- **In Development**: Charges ₹1 (for safe testing).
+- **In Production**: Charges the actual `plan.price`.
+
+#### 2. Dynamic Mobile Number
+Uses the actual user's phone number recorded during signup:
+```javascript
+const mobileNumber = req.user.phone || "7036592919";
 ```
 
-**For production**, update this to use actual plan prices:
-
+#### 3. Secured Base URL
+Automatically switches to the PhonePe production API when `PHONEPE_ENV=PROD`:
 ```javascript
-const amount = plan.price * 100; // Convert rupees to paise
+const BASE_URL = ENV === "PROD" ? "https://api.phonepe.com/apis/hermes" : "...";
 ```
-
-### Mobile Number
-
-Currently uses test number `7036592919`. For production, use actual user's mobile:
-
-```javascript
-const mobileNumber = req.user.phone || "0000000000";
-```
-
-Make sure user phone number is collected during signup!

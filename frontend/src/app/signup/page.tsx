@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
+import { API_URL } from '../../lib/api';
 
 function SignupContent() {
     const [formData, setFormData] = useState({
@@ -28,8 +29,7 @@ function SignupContent() {
         setError('');
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const res = await fetch(`${apiUrl}/api/auth/signup`, {
+            const res = await fetch(`${API_URL}/api/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
