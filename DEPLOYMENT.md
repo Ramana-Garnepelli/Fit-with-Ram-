@@ -50,20 +50,18 @@ git push -u origin main
 5. Select the `backend` folder as root directory
 6. Add environment variables:
    ```
-   PORT=5000
    NODE_ENV=production
    MONGODB_URI=<your_mongodb_atlas_connection_string>
    JWT_SECRET=<generate_a_secure_random_string>
    FRONTEND_URL=https://fitwithram.com
-   BACKEND_URL=<will_be_provided_after_deployment>
+   BACKEND_URL=https://api.fitwithram.com
    PHONEPE_MERCHANT_ID=<your_production_merchant_id>
    PHONEPE_SALT_KEY=<your_production_salt_key>
    PHONEPE_SALT_INDEX=1
-   PHONEPE_ENV=PRODUCTION
+   PHONEPE_ENV=PROD
    ```
 7. Deploy
-8. Copy the deployment URL (e.g., `https://your-app.railway.app`)
-9. Update `BACKEND_URL` environment variable with this URL
+8. Add `api.fitwithram.com` as a custom domain for the Railway service and configure its DNS as shown in the Railway dashboard.
 
 ### Option B: Render
 
@@ -92,7 +90,7 @@ git push -u origin main
    - Output Directory: .next
 6. Add environment variable:
    ```
-   NEXT_PUBLIC_API_URL=<your_backend_url_from_step_3>
+   NEXT_PUBLIC_API_URL=https://api.fitwithram.com
    ```
 7. Deploy
 8. Copy the deployment URL (e.g., `https://your-app.vercel.app`)

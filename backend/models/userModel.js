@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const purchaseSchema = mongoose.Schema({
+    paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
     purchaseDate: { type: Date, default: Date.now },
     amount: { type: Number, required: true },
@@ -54,7 +55,7 @@ const progressPhotoSchema = mongoose.Schema({
 
 const userSchema = mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     phone: { type: String },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },

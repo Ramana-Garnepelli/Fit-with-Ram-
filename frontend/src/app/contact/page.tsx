@@ -43,8 +43,12 @@ export default function Contact() {
                                     <MapPin size={24} />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-400">Location</p>
-                                    <p className="font-bold text-lg">GACHIBOWLI, HYDERABAD</p>
+                                    <p className="text-sm text-gray-400">Address</p>
+                                    <address className="font-bold text-lg not-italic">
+                                        H.No. 4-32-1578/2/8, Sree Devi Nilayam,<br />
+                                        Chakradhari Nagar, Allwyn Colony Phase 2,<br />
+                                        Kukatpally, 500072
+                                    </address>
                                 </div>
                             </div>
                         </div>

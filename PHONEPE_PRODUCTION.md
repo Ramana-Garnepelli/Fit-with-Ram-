@@ -1,130 +1,32 @@
-# Production PhonePe Integration Guide
+# PhonePe Production Setup
 
-## Overview
+The backend uses PhonePe's payment page and verifies transaction status directly with PhonePe before activating a plan. It does not contain test credentials or simulate successful payments. UAT and production both charge the plan's configured price; use only PhonePe test accounts in UAT.
 
-This guide explains how to switch from PhonePe sandbox (UAT) to production environment.
+## Required configuration
 
-## Current Status
-
-The application is currently configured for **PhonePe Sandbox (UAT)** environment for testing purposes.
-
-## Prerequisites for Production
-
-1. **PhonePe Business Account**: You need an approved PhonePe Business account
-2. **Production Credentials**: Obtain from PhonePe Business Dashboard
-   - Merchant ID
-   - Salt Key
-   - Salt Index (usually 1)
-
-## Getting Production Credentials
-
-1. Log in to [PhonePe Business Dashboard](https://business.phonepe.com/)
-2. Navigate to "Developers" or "API" section
-3. Find your production credentials:
-   - Merchant ID
-   - Salt Key
-   - Salt Index
-
-## Configuration Changes
-
-### Backend Environment Variables
-
-Update your `.env` file (or hosting platform environment variables):
+Set these backend environment variables locally in `backend/.env` or in your hosting provider's secret/environment settings:
 
 ```env
-# Change from UAT to PRODUCTION
-PHONEPE_ENV=PRODUCTION
-
-# Replace with your production credentials
-PHONEPE_MERCHANT_ID=your_production_merchant_id
-PHONEPE_SALT_KEY=your_production_salt_key
-PHONEPE_SALT_INDEX=1
+PHONEPE_ENV=PROD
+PHONEPE_MERCHANT_ID=<production merchant ID>
+PHONEPE_SALT_KEY=<production salt key>
+PHONEPE_SALT_INDEX=<production salt index>
+FRONTEND_URL=https://fitwithram.com
+BACKEND_URL=https://api.fitwithram.com
+MONGODB_URI=<persistent MongoDB connection string>
+JWT_SECRET=<long random secret>
 ```
 
-### Code Changes
+For PhonePe's test environment, set `PHONEPE_ENV=UAT` and use the UAT credentials from your PhonePe account. Do not copy production credentials into the repository, frontend, or chat. Configure the PhonePe redirect and callback URLs to match the `FRONTEND_URL` and `BACKEND_URL` values.
 
-The code in `backend/controllers/phonePeController.js` automatically switches between sandbox and production based on the `PHONEPE_ENV` variable:
+The production backend requires `MONGODB_URI` and `JWT_SECRET` and will not fall back to an in-memory database. PhonePe payment initiation returns a configuration error until its merchant credentials and public URLs are set.
 
-```javascript
-const BASE_URL = ENV === "PROD" || ENV === "PRODUCTION"
-    ? "https://api.phonepe.com/apis/hermes"
-    : "https://api-preprod.phonepe.com/apis/pg-sandbox";
-```
+## Customer payment flow
 
-**No code changes needed** - just update environment variables!
+1. A signed-in customer chooses an active plan.
+2. The backend creates a PhonePe payment for the full plan price and returns PhonePe's hosted checkout URL.
+3. PhonePe returns the customer to `/payment/success` with the merchant transaction ID.
+4. The backend checks the transaction and amount with PhonePe, then activates the plan once for the owning customer.
+5. The customer is redirected to the dashboard after confirmation. A still-processing transaction remains pending and can be checked again.
 
-### Update Callback URLs
-
-In PhonePe Business Dashboard, configure:
-
-1. **Redirect URL**: `https://fitwithram.com/payment/success?id={merchantTransactionId}`
-2. **Callback URL**: `https://api.fitwithram.com/api/payment/phonepe/callback`
-
-Replace with your actual production domain.
-
-## Testing Checklist
-
-Before going live:
-
-- [ ] Production credentials configured
-- [ ] Callback URLs updated in PhonePe dashboard
-- [ ] Test with small amount (₹1 or ₹10)
-- [ ] Verify payment success flow
-- [ ] Verify payment failure handling
-- [ ] Check database updates correctly
-- [ ] Verify user gets access to purchased plan
-
-## Important Differences: Sandbox vs Production
-
-| Feature | Sandbox (UAT) | Production |
-|---------|---------------|------------|
-| Base URL | `api-preprod.phonepe.com` | `api.phonepe.com` |
-| Test Payments | Simulated | Real money |
-| Credentials | Test credentials | Production credentials |
-| Simulator | PhonePe Simulator app | Real PhonePe app |
-
-## Security Notes
-
-1. **Never commit production credentials** to Git
-2. **Use environment variables** for all sensitive data
-3. **Keep Salt Key secret** - never expose in frontend code
-4. **Monitor transactions** regularly in PhonePe dashboard
-5. **Set up alerts** for failed payments
-
-## Rollback Plan
-
-If production integration has issues:
-
-1. Change `PHONEPE_ENV=UAT` in environment variables
-2. Restart backend service
-3. System will automatically use sandbox again
-
-## Support
-
-For PhonePe integration issues:
-- PhonePe Business Support: support@phonepe.com
-- PhonePe Developer Docs: https://developer.phonepe.com/
-
-### Automated Production Logic ✅
-
-The current implementation in `backend/controllers/phonePeController.js` is already designed for a "hands-free" production switch:
-
-#### 1. Dynamic Amount
-The code automatically detects if it's in a production environment:
-```javascript
-const amount = process.env.NODE_ENV === 'production' ? plan.price * 100 : 100;
-```
-- **In Development**: Charges ₹1 (for safe testing).
-- **In Production**: Charges the actual `plan.price`.
-
-#### 2. Dynamic Mobile Number
-Uses the actual user's phone number recorded during signup:
-```javascript
-const mobileNumber = req.user.phone || "7036592919";
-```
-
-#### 3. Secured Base URL
-Automatically switches to the PhonePe production API when `PHONEPE_ENV=PROD`:
-```javascript
-const BASE_URL = ENV === "PROD" ? "https://api.phonepe.com/apis/hermes" : "...";
-```
+Never treat the browser redirect or callback alone as proof of payment. The backend status verification is authoritative.

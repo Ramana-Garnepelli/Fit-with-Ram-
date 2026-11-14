@@ -73,8 +73,8 @@ export default function AdminDashboard() {
                             <Activity className="text-purple-600" size={24} />
                         </div>
                     </div>
-                    <p className="relative text-4xl font-bold text-gray-900">{stats.recentSales.length}</p>
-                    <span className="relative text-sm text-gray-500 mt-2">In last few days</span>
+                    <p className="relative text-4xl font-bold text-gray-900">{stats.activeCount}</p>
+                    <span className="relative text-sm text-gray-500 mt-2">Current memberships</span>
                 </div>
             </div>
 

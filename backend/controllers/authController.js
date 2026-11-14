@@ -2,6 +2,12 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+const publicUser = (user) => {
+    const value = user.toObject ? user.toObject() : user;
+    delete value.password;
+    return value;
+};
+
 // Generate JWT
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
@@ -13,7 +19,8 @@ const generateToken = (id) => {
 // @route   POST /api/auth/signup
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password, phone } = req.body;
+    const { name, password, phone } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
     if (!name || !email || !password) {
         res.status(400);
@@ -32,27 +39,19 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ONLY ramana.garnepelli16@gmail.com can be admin
-    const adminEmail = "ramana.garnepelli16@gmail.com";
-    const role = email === adminEmail ? 'admin' : 'user';
-
     // Create user
     const user = await User.create({
         name,
         email,
         password: hashedPassword,
         phone,
-        role,
+        // Public registration must never grant elevated access based on an
+        // unverified email address. Provision admins through the operator script.
+        role: 'user',
     });
 
     if (user) {
-        res.status(201).json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            token: generateToken(user.id),
-        });
+        res.status(201).json({ ...publicUser(user), token: generateToken(user.id) });
     } else {
         res.status(400);
         throw new Error('Invalid user data');
@@ -63,7 +62,8 @@ const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
     // Check for user email
     const user = await User.findOne({ email });
@@ -77,14 +77,7 @@ const loginUser = async (req, res) => {
             await user.save();
         }
 
-        res.json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            loginDays: user.loginDays,
-            token: generateToken(user.id),
-        });
+        res.json({ ...publicUser(user), token: generateToken(user.id) });
     } else {
         res.status(400);
         throw new Error('Invalid credentials');
@@ -106,23 +99,14 @@ const updateProfile = async (req, res) => {
         const user = await User.findById(req.user._id);
 
         if (user) {
-            if (req.body.height) user.height = req.body.height;
-            if (req.body.weight) {
+            if (req.body.height !== undefined && req.body.height !== '') user.height = Number(req.body.height);
+            if (req.body.weight !== undefined && req.body.weight !== '') {
                 user.weightLog.push({ weight: req.body.weight });
             }
 
             const updatedUser = await user.save();
 
-            res.json({
-                _id: updatedUser.id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                height: updatedUser.height,
-                weightLog: updatedUser.weightLog,
-                loginDays: updatedUser.loginDays,
-                token: generateToken(updatedUser.id),
-            });
+            res.json({ ...publicUser(updatedUser), token: generateToken(updatedUser.id) });
         } else {
             res.status(404);
             throw new Error('User not found');

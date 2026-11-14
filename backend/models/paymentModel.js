@@ -3,9 +3,11 @@ const mongoose = require('mongoose');
 const paymentSchema = mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     plan: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
-    razorpayOrderId: { type: String, required: true },
+    razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
+    merchantTransactionId: { type: String, unique: true, sparse: true },
+    providerPaymentId: { type: String },
     amount: { type: Number, required: true },
     currency: { type: String, default: 'INR' },
     status: { type: String, enum: ['created', 'pending', 'paid', 'failed'], default: 'created' },

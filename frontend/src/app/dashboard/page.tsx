@@ -11,6 +11,7 @@ import DietTracker from '../../components/DietTracker';
 import ProgressLogger from '../../components/ProgressLogger';
 import WeeklyCalendar from '../../components/WeeklyCalendar';
 import { API_URL } from '../../lib/api';
+import TransactionHistory from '../../components/TransactionHistory';
 
 export default function Dashboard() {
     const [user, setUser] = useState<any>(null);
@@ -72,8 +73,11 @@ export default function Dashboard() {
             }));
         }
 
-        const mockHasPlan = localStorage.getItem('hasPlan') === 'true' || userData.activePlanType !== null;
-        setHasActivePlan(mockHasPlan);
+        const now = Date.now();
+        const hasValidPurchase = (userData.purchases || []).some((purchase: any) =>
+            purchase.validUntil && new Date(purchase.validUntil).getTime() > now
+        );
+        setHasActivePlan(hasValidPurchase);
     }, [router]);
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -289,6 +293,8 @@ export default function Dashboard() {
                         </form>
                     </div>
 
+                    <div className="mt-10"><TransactionHistory /></div>
+
                 </div>
             </div>
         );
@@ -373,6 +379,8 @@ export default function Dashboard() {
                         ))}
                     </div>
                 </div>
+
+                <div className="mb-16"><TransactionHistory /></div>
 
             </div>
         </div>

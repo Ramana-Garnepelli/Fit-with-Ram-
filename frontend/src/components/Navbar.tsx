@@ -11,15 +11,21 @@ const Navbar = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userRole = localStorage.getItem('role');
+    let userRole: string | null = null;
+    try {
+      userRole = JSON.parse(localStorage.getItem('user') || '{}').role || null;
+    } catch {
+      localStorage.removeItem('user');
+    }
     setIsLoggedIn(!!token);
     setRole(userRole);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('role');
     localStorage.removeItem('user');
+    localStorage.removeItem('hasPlan');
+    localStorage.removeItem('activePlan');
     window.location.href = '/';
   };
 

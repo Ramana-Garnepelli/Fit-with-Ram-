@@ -101,9 +101,9 @@ export default function Home() {
             Dedicated to helping you reach your maximum physical potential through science-based training and nutrition.
           </p>
           <div className="flex justify-center gap-8 mb-12">
-            <Link href="/privacy" className="text-gray-500 hover:text-black font-bold text-xs uppercase tracking-widest">Privacy</Link>
+            <Link href="/privacy-policy" className="text-gray-500 hover:text-black font-bold text-xs uppercase tracking-widest">Privacy</Link>
             <Link href="/terms" className="text-gray-500 hover:text-black font-bold text-xs uppercase tracking-widest">Terms</Link>
-            <Link href="/refund" className="text-gray-500 hover:text-black font-bold text-xs uppercase tracking-widest">Refund</Link>
+            <Link href="/refund-policy" className="text-gray-500 hover:text-black font-bold text-xs uppercase tracking-widest">Refund</Link>
           </div>
           <p className="text-gray-300 text-[10px] uppercase tracking-[0.2em] font-black">© 2026 FitWithRAM. All rights reserved.</p>
         </div>

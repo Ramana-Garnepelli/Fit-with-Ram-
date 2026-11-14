@@ -4,6 +4,39 @@ const Payment = require('../models/paymentModel');
 const User = require('../models/userModel');
 const Plan = require('../models/planModel');
 
+const getMyPayments = async (req, res) => {
+    try {
+        const payments = await Payment.find({ user: req.user._id })
+            .sort({ createdAt: -1 })
+            .populate('plan', 'name type duration mode');
+        res.json(payments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const getAllPayments = async (req, res) => {
+    try {
+        const { status, page = 1, limit = 50 } = req.query;
+        const filter = {};
+        if (['created', 'pending', 'paid', 'failed'].includes(status)) filter.status = status;
+        const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1);
+        const pageSize = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
+        const [payments, total, totals] = await Promise.all([
+            Payment.find(filter).sort({ createdAt: -1 }).skip((pageNumber - 1) * pageSize).limit(pageSize)
+                .populate('user', 'name email phone').populate('plan', 'name type'),
+            Payment.countDocuments(filter),
+            Payment.aggregate([
+                { $match: { status: 'paid' } },
+                { $group: { _id: '$currency', count: { $sum: 1 }, revenue: { $sum: '$amount' } } }
+            ])
+        ]);
+        res.json({ payments, total, page: pageNumber, pages: Math.ceil(total / pageSize), totals });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Lazy initialization to prevent crash when keys are not set
 let razorpayInstance = null;
 const getRazorpay = () => {
@@ -26,9 +59,9 @@ const createOrder = async (req, res) => {
     const { planId } = req.body;
     const plan = await Plan.findById(planId);
 
-    if (!plan) {
+    if (!plan || !plan.isActive) {
         res.status(404);
-        throw new Error('Plan not found');
+        throw new Error('Plan not found or unavailable');
     }
 
     const options = {
@@ -38,29 +71,15 @@ const createOrder = async (req, res) => {
     };
 
     try {
-        let order;
-
-        // Check if Razorpay keys are valid (placeholder or missing)
-        const isMock = !process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder';
-
-        if (isMock) {
-            console.log('Using MOCK Razorpay Order');
-            order = {
-                id: `order_mock_${Date.now()}`,
-                currency: 'INR',
-                amount: options.amount,
-                status: 'created'
-            };
-        } else {
-            order = await getRazorpay().orders.create(options);
-        }
+        const order = await getRazorpay().orders.create(options);
 
         const payment = await Payment.create({
             user: req.user.id,
             plan: planId,
             razorpayOrderId: order.id,
             amount: plan.price,
-            status: 'created'
+            status: 'created',
+            provider: 'razorpay'
         });
 
         res.json(order);
@@ -77,61 +96,82 @@ const createOrder = async (req, res) => {
 const verifyPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    // Check for Mock Order
-    const isMock = razorpay_order_id && razorpay_order_id.startsWith('order_mock_');
-
-    let isValid = false;
-
-    if (isMock) {
-        isValid = true;
-    } else {
-        const body = razorpay_order_id + '|' + razorpay_payment_id;
-        const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(body.toString())
-            .digest('hex');
-        isValid = expectedSignature === razorpay_signature;
+    if (
+        typeof razorpay_order_id !== 'string' ||
+        typeof razorpay_payment_id !== 'string' ||
+        typeof razorpay_signature !== 'string' ||
+        !process.env.RAZORPAY_KEY_SECRET
+    ) {
+        return res.status(400).json({ success: false, message: 'Invalid payment verification request' });
     }
 
-    if (isValid) {
-        // Update payment status
-        const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
-        if (payment) {
-            payment.razorpayPaymentId = razorpay_payment_id || `pay_mock_${Date.now()}`;
-            payment.razorpaySignature = razorpay_signature || 'mock_signature';
-            payment.status = 'paid';
-            await payment.save();
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(body)
+        .digest('hex');
+    const expectedBuffer = Buffer.from(expectedSignature);
+    const actualBuffer = Buffer.from(razorpay_signature);
 
-            // Unlock plan for user
-            const user = await User.findById(payment.user);
-            const plan = await Plan.findById(payment.plan);
+    if (expectedBuffer.length !== actualBuffer.length || !crypto.timingSafeEqual(expectedBuffer, actualBuffer)) {
+        return res.status(400).json({ success: false, message: 'Invalid signature' });
+    }
 
-            user.purchases.push({
-                planId: payment.plan,
-                amount: payment.amount,
-                purchaseDate: new Date(),
-                validUntil: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // Assuming 30 days validity or logic from plan
-            });
+    const payment = await Payment.findOne({
+        razorpayOrderId: razorpay_order_id,
+        user: req.user._id,
+        provider: 'razorpay'
+    });
+    if (!payment) {
+        return res.status(404).json({ success: false, message: 'Payment not found' });
+    }
+    if (payment.status === 'paid') {
+        return res.json({ success: true, message: 'Payment verified' });
+    }
+    if (payment.status !== 'created') {
+        return res.status(400).json({ success: false, message: 'Payment is not awaiting verification' });
+    }
 
-            // Auto-assign template if available
-            if (plan.workoutTemplate) user.workoutPlan = plan.workoutTemplate;
-            if (plan.dietTemplate) user.dietPlan = plan.dietTemplate;
+    const [user, plan] = await Promise.all([
+        User.findById(payment.user),
+        Plan.findById(payment.plan)
+    ]);
+    if (!user || !plan) {
+        return res.status(404).json({ success: false, message: 'Could not activate the purchased plan' });
+    }
 
-            // Set Active Plan
-            user.activePlanType = plan.type;
-            user.currentDay = 1;
-
-            await user.save();
+    const durationDays = Number.isFinite(plan.duration) && plan.duration > 0 ? plan.duration : 30;
+    await User.updateOne(
+        { _id: user._id, 'purchases.paymentId': { $ne: payment._id } },
+        {
+            $push: {
+                purchases: {
+                    paymentId: payment._id,
+                    planId: plan._id,
+                    amount: payment.amount,
+                    purchaseDate: new Date(),
+                    validUntil: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+                }
+            },
+            $set: {
+                ...(plan.workoutTemplate && { workoutPlan: plan.workoutTemplate }),
+                ...(plan.dietTemplate && { dietPlan: plan.dietTemplate }),
+                activePlanType: plan.type,
+                currentDay: 1
+            }
         }
+    );
 
-        res.json({ success: true, message: 'Payment verified' });
-    } else {
-        res.status(400);
-        throw new Error('Invalid signature');
-    }
+    payment.razorpayPaymentId = razorpay_payment_id;
+    payment.razorpaySignature = razorpay_signature;
+    payment.status = 'paid';
+    await payment.save();
+    return res.json({ success: true, message: 'Payment verified' });
 };
 
 module.exports = {
     createOrder,
-    verifyPayment
+    verifyPayment,
+    getMyPayments,
+    getAllPayments
 };

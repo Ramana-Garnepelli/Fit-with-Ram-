@@ -39,9 +39,14 @@ const getDashboardStats = async (req, res) => {
     try {
         const usersCount = await User.countDocuments();
 
-        // Calculate Total Revenue from Payments
-        const payments = await Payment.find({ status: 'paid' });
-        const totalRevenue = payments.reduce((acc, p) => acc + p.amount, 0);
+        const now = new Date();
+        const [revenueStats, activeUsersCount] = await Promise.all([
+            Payment.aggregate([
+                { $match: { status: 'paid' } },
+                { $group: { _id: null, totalRevenue: { $sum: '$amount' }, paidCount: { $sum: 1 } } }
+            ]),
+            User.countDocuments({ purchases: { $elemMatch: { validUntil: { $gt: now } } } })
+        ]);
 
         // Get Recent Activations (Last 5 paid payments)
         const recentSales = await Payment.find({ status: 'paid' })
@@ -52,8 +57,12 @@ const getDashboardStats = async (req, res) => {
 
         res.json({
             usersCount,
-            totalRevenue,
-            activeCount: recentSales.length, // Approximate or fetch real active count
+            activeCount: activeUsersCount,
+            paidTransactions: revenueStats[0]?.paidCount || 0,
+            averageOrderValue: revenueStats[0]?.paidCount
+                ? Math.round((revenueStats[0].totalRevenue / revenueStats[0].paidCount) * 100) / 100
+                : 0,
+            totalRevenue: revenueStats[0]?.totalRevenue || 0,
             recentSales
         });
     } catch (error) {
@@ -89,7 +98,9 @@ const updateUserPlan = async (req, res) => {
             user.activePlanType = req.body.planType || user.activePlanType;
 
             const updatedUser = await user.save();
-            res.json(updatedUser);
+            const safeUser = updatedUser.toObject();
+            delete safeUser.password;
+            res.json(safeUser);
         } else {
             res.status(404).json({ message: 'User not found' });
         }

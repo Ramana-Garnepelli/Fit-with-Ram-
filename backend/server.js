@@ -39,6 +39,10 @@ const connectDB = async () => {
         const conn = await mongoose.connect(dbUri);
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+            throw error;
+        }
+
         console.log('Failed to connect to configured MongoDB.');
         console.log('Starting In-Memory MongoDB...');
         try {
@@ -140,9 +144,19 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+if (process.env.NODE_ENV === 'production') {
+    const missing = ['MONGODB_URI', 'JWT_SECRET'].filter((name) => !process.env[name]);
+    if (missing.length) {
+        throw new Error(`Missing required production environment variables: ${missing.join(', ')}`);
+    }
+}
+
 connectDB().then(async () => {
     await seedData();
     app.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     });
+}).catch((error) => {
+    console.error('Backend startup failed:', error.message);
+    process.exit(1);
 });

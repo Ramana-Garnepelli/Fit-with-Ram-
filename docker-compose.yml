@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fitwithram
+      POSTGRES_USER: fitwithram
+      POSTGRES_PASSWORD: fitwithram
+    ports:
+      - "5432:5432"
+    volumes:
+      - fitwithram-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitwithram -d fitwithram"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - .env.example
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://fitwithram:fitwithram@db:5432/fitwithram
+      DEMO_ORGANIZATION_SLUG: ${DEMO_ORGANIZATION_SLUG:-fitwithram}
+      DEMO_ORGANIZATION_NAME: ${DEMO_ORGANIZATION_NAME:-FITWITHRAM}
+      DEMO_BRANCH_SLUG: ${DEMO_BRANCH_SLUG:-central}
+      DEMO_BRANCH_NAME: ${DEMO_BRANCH_NAME:-Central}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "alembic upgrade head && python -m app.scripts.seed_demo_tenant && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+  web:
+    build:
+      context: apps/web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000/api/v1
+        VITE_ORGANIZATION_SLUG: ${DEMO_ORGANIZATION_SLUG:-fitwithram}
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  fitwithram-postgres:
